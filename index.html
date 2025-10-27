@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Laboratorio de Ideas Oasis</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" href="data:," />
+  <meta name="theme-color" content="#0b0b0e" />
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-logo">⚙️</div>
+      <div class="brand-text">
+        <strong>Oasis Air Cleaner Services LLC</strong>
+        <small>Laboratorio de Ideas</small>
+      </div>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Buscar</label>
+        <input id="searchInput" type="search" placeholder="Título, tags, categoría…" />
+      </div>
+
+      <div class="control-row">
+        <div class="control-group">
+          <label>Categoría</label>
+          <select id="filterCategory">
+            <option value="">Todas</option>
+            <option>Finanzas</option>
+            <option>Diagnóstico</option>
+            <option>Marketing</option>
+            <option>Operaciones</option>
+            <option>Producto</option>
+            <option>Otros</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>Prioridad</label>
+          <select id="filterPriority">
+            <option value="">Todas</option>
+            <option>Alta</option>
+            <option>Media</option>
+            <option>Baja</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnExport">Exportar JSON</button>
+        <label class="import-btn">
+          Importar JSON
+          <input id="fileImport" type="file" accept="application/json" hidden />
+        </label>
+        <button id="btnClear" class="danger">Borrar Todo</button>
+      </div>
+
+      <footer class="signature">
+        © Oasis Air Cleaner Services LLC × GPT-5 — Innovación, disciplina y tecnología como uno solo.
+      </footer>
+    </div>
+  </aside>
+
+  <main class="main">
+    <section class="new-idea">
+      <h2>Agregar nueva idea</h2>
+      <form id="ideaForm">
+        <div class="row">
+          <div class="field">
+            <label>Título *</label>
+            <input name="title" maxlength="80" required placeholder="Ej: App de facturación unificada" />
+          </div>
+          <div class="field">
+            <label>Categoría</label>
+            <select name="category">
+              <option>Finanzas</option>
+              <option>Diagnóstico</option>
+              <option>Marketing</option>
+              <option>Operaciones</option>
+              <option>Producto</option>
+              <option>Otros</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Prioridad</label>
+            <select name="priority">
+              <option>Alta</option>
+              <option>Media</option>
+              <option>Baja</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="field">
+            <label>Etiquetas (comma)</label>
+            <input name="tags" placeholder="ej: whatsapp, pdf, calendario" />
+          </div>
+          <div class="field small">
+            <label>Impacto (0-10)</label>
+            <input name="impact" type="number" min="0" max="10" value="7" />
+          </div>
+          <div class="field small">
+            <label>Confianza (0-10)</label>
+            <input name="confidence" type="number" min="0" max="10" value="7" />
+          </div>
+          <div class="field small">
+            <label>Facilidad (0-10)</label>
+            <input name="ease" type="number" min="0" max="10" value="7" />
+          </div>
+          <div class="field">
+            <label>Fecha objetivo</label>
+            <input name="due" type="date" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Descripción</label>
+          <textarea name="description" rows="3" placeholder="Detalles, entregables, criterios de éxito…"></textarea>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit">Agregar</button>
+          <button type="reset" class="ghost">Limpiar</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="kanban">
+      <div class="column" data-status="backlog">
+        <div class="column-header">
+          <h3>Backlog</h3><span class="count" id="count-backlog">0</span>
+        </div>
+        <div class="dropzone" id="col-backlog"></div>
+      </div>
+
+      <div class="column" data-status="doing">
+        <div class="column-header">
+          <h3>En Proceso</h3><span class="count" id="count-doing">0</span>
+        </div>
+        <div class="dropzone" id="col-doing"></div>
+      </div>
+
+      <div class="column" data-status="done">
+        <div class="column-header">
+          <h3>Hecho</h3><span class="count" id="count-done">0</span>
+        </div>
+        <div class="dropzone" id="col-done"></div>
+      </div>
+    </section>
+  </main>
+
+  <template id="cardTemplate">
+    <article class="card" draggable="true">
+      <header>
+        <h4 class="title"></h4>
+        <div class="meta">
+          <span class="badge priority"></span>
+          <span class="badge category"></span>
+          <span class="badge ice" title="ICE = (Impacto + Confianza + Facilidad) / 3"></span>
+        </div>
+      </header>
+      <p class="desc"></p>
+      <div class="tags"></div>
+      <div class="footer">
+        <span class="due"></span>
+        <div class="actions">
+          <button class="ghost move" data-move="-1" title="← Mover a la columna anterior">←</button>
+          <button class="ghost move" data-move="+1" title="→ Mover a la columna siguiente">→</button>
+          <button class="ghost edit" title="Editar">✎</button>
+          <button class="ghost delete danger" title="Borrar">🗑</button>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <dialog id="editDialog">
+    <form method="dialog" id="editForm">
+      <h3>Editar idea</h3>
+      <input type="hidden" name="id" />
+      <div class="field">
+        <label>Título *</label>
+        <input name="title" required />
+      </div>
+      <div class="field">
+        <label>Descripción</label>
+        <textarea name="description" rows="3"></textarea>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Categoría</label>
+          <select name="category">
+            <option>Finanzas</option>
+            <option>Diagnóstico</option>
+            <option>Marketing</option>
+            <option>Operaciones</option>
+            <option>Producto</option>
+            <option>Otros</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Prioridad</label>
+          <select name="priority">
+            <option>Alta</option>
+            <option>Media</option>
+            <option>Baja</option>
+          </select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Etiquetas</label>
+          <input name="tags" />
+        </div>
+        <div class="field small">
+          <label>Impacto</label>
+          <input name="impact" type="number" min="0" max="10" />
+        </div>
+        <div class="field small">
+          <label>Confianza</label>
+          <input name="confidence" type="number" min="0" max="10" />
+        </div>
+        <div class="field small">
+          <label>Facilidad</label>
+          <input name="ease" type="number" min="0" max="10" />
+        </div>
+        <div class="field">
+          <label>Fecha objetivo</label>
+          <input name="due" type="date" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button value="save">Guardar cambios</button>
+        <button class="ghost" value="cancel">Cancelar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
